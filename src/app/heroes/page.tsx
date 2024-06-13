@@ -1,19 +1,11 @@
 "use client"; // This is a client component 👈🏽
-import axios from "axios";
-import { AxiosResponse } from "../../../node_modules/axios/index";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import styled from "styled-components";
-
-const urlGetHeroes = "https://hahow-recruit.herokuapp.com/heroes";
-
-interface Hero {
-    id: string;
-    name: string;
-    image: string;
-}
+import { Hero } from "../type";
+import { getHeroes, fetchProfileData } from "../api";
 
 // 定義卡片容器
-const CardContainer = styled.div`
+const Container = styled.div`
   max-width: 800px;
   margin: 0 auto;
   padding: 20px;
@@ -44,24 +36,89 @@ const HeroName = styled.div`
   font-weight: bold;
 `;
 
-export default function Heroes() {
-    const [heroes, setHeroes] = useState<Hero[]>([]);
+const AbilityContainer = styled.div`
+  border: 1px solid #000;
+  padding: 20px;
+  width: 300px;
+`;
 
+const AbilityRow = styled.div`
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+`;
+
+const AbilityLabel = styled.div`
+  flex: 1;
+`;
+
+const AbilityValue = styled.div`
+  flex: 1;
+  text-align: center;
+`;
+
+const Button = styled.button`
+  width: 30px;
+  height: 30px;
+  margin: 0 5px;
+`;
+
+const SaveButton = styled.button`
+  margin-top: 20px;
+  padding: 10px;
+  width: 100%;
+`;
+
+const PointsRemaining = styled.div`
+  margin-top: 20px;
+  text-align: right;
+`;
+
+export default function Heroes() {
+    // MOCK DATA
+    const abilities = {
+        str: 5, // 力量
+        int: 5, // 智力
+        agi: 0, // 敏捷
+        luk: 5, // 幸運
+      };
+    
+      const pointsRemaining = 30;
+
+    const [heroes, setHeroes] = useState<Hero[]>([]);
+    const [heroProfiles, setHeroProfiles] = useState({})
+    const [chosenId, setChosenId] = useState('');
+
+    const handleShowProfile = useCallback((id: string) => {
+        window.history.replaceState(null, "", `/heroes/:${id}`)
+        setChosenId(id);
+    }, [])
+
+    // 拿到英雄能力值
     useEffect(() => {
-        axios
-            .get<Hero[]>(urlGetHeroes)
-            .then((response: AxiosResponse<Hero[]>) => {
-                console.log("Response:", response.data);
-                setHeroes(response.data);
+        fetchProfileData()
+            .then((data) => {
+                setHeroProfiles(data)
             })
-            .catch((error: Error) => {
+            .catch((error) => {
+            });
+    }, []);
+
+    // 拿到英雄名單
+    useEffect(() => {
+        getHeroes()
+            .then((heroesData) => {
+                setHeroes(heroesData);
+                console.log("Heroes data:", heroesData);
+            })
+            .catch((error) => {
                 console.error("Error fetching data:", error);
             });
     }, []);
 
     return (
         <>
-            <CardContainer>
+            <Container>
                 <h1>Marvel Heroes</h1>
                 <div
                     style={{
@@ -71,8 +128,13 @@ export default function Heroes() {
                     }}
                 >
                     {Array.isArray(heroes) && heroes.length > 0 ? (
-                        heroes.map(hero => (
-                            <Card key={hero.id}>
+                        heroes.map((hero) => (
+                            <Card
+                                key={hero.id}
+                                onClick={() => {
+                                    handleShowProfile(hero.id)
+                                }}
+                            >
                                 <HeroImage src={hero.image} alt={hero.name} />
                                 <HeroName>{hero.name}</HeroName>
                             </Card>
@@ -81,7 +143,19 @@ export default function Heroes() {
                         <p>Loading...</p>
                     )}
                 </div>
-            </CardContainer>
+                <AbilityContainer>
+                {Object.entries(abilities).map(([key, value]) => (
+                    <AbilityRow key={key}>
+                        <AbilityLabel>{key.toUpperCase()}</AbilityLabel>
+                        <Button>+</Button>
+                        <AbilityValue>{value}</AbilityValue>
+                        <Button>-</Button>
+                    </AbilityRow>
+                ))}
+                <PointsRemaining>剩餘點數: {pointsRemaining}</PointsRemaining>
+                <SaveButton>儲存</SaveButton>
+            </AbilityContainer>
+            </Container>
         </>
     );
 }
