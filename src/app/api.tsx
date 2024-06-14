@@ -1,18 +1,13 @@
 import axios, { AxiosResponse } from "axios";
 import { Hero, HeroProfile } from "./type";
 
-const urlGetHeroes = "https://hahow-recruit.herokuapp.com/heroes";
+const HERO_LIST_URL = "https://hahow-recruit.herokuapp.com/heroes";
+export const PROFILE_BASE_URL = 'https://hahow-recruit.herokuapp.com/heroes'
 
-// 定義 API URL 的陣列
-const apiUrls = [
-    'https://hahow-recruit.herokuapp.com/heroes/1/profile',
-    'https://hahow-recruit.herokuapp.com/heroes/2/profile',
-    // 可以繼續添加更多的 URL
-];
 
 
 export const getHeroes = (): Promise<Hero[]> => {
-    return axios.get<Hero[]>(urlGetHeroes)
+    return axios.get<Hero[]>(HERO_LIST_URL)
         .then((response: AxiosResponse<Hero[]>) => {
             return response.data; // 返回資料
         })
@@ -22,7 +17,7 @@ export const getHeroes = (): Promise<Hero[]> => {
         });
 };
 
-export const fetchProfileData = async () => {
+export const fetchProfileData = async (apiUrls: string[]) => {
     try {
         const responses = await Promise.allSettled(apiUrls.map(url => axios.get<HeroProfile>(url)));
 
@@ -46,10 +41,3 @@ export const fetchProfileData = async () => {
         throw error; // 這裡可以根據需求進一步處理錯誤
     }
 };
-
-// // 使用範例
-// fetchProfileData().then((data) => {
-//     // 在這裡處理獲得的資料
-// }).catch((error) => {
-//     // 在這裡處理錯誤
-// });

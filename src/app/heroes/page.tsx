@@ -1,8 +1,8 @@
 "use client"; // This is a client component 👈🏽
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import styled from "styled-components";
 import { Hero } from "../type";
-import { getHeroes, fetchProfileData } from "../api";
+import { getHeroes, fetchProfileData, PROFILE_BASE_URL } from "../api";
 
 // 定義卡片容器
 const Container = styled.div`
@@ -86,8 +86,12 @@ export default function Heroes() {
       const pointsRemaining = 30;
 
     const [heroes, setHeroes] = useState<Hero[]>([]);
-    const [heroProfiles, setHeroProfiles] = useState({})
+    const [heroProfiles, setHeroProfiles] = useState({});
     const [chosenId, setChosenId] = useState('');
+
+    const generateProfileApis = useMemo(() => {
+        return heroes.map(hero => `${PROFILE_BASE_URL}/${hero.id}/profile`);
+    }, [heroes])
 
     const handleShowProfile = useCallback((id: string) => {
         window.history.replaceState(null, "", `/heroes/:${id}`)
@@ -96,13 +100,13 @@ export default function Heroes() {
 
     // 拿到英雄能力值
     useEffect(() => {
-        fetchProfileData()
+        fetchProfileData(generateProfileApis)
             .then((data) => {
                 setHeroProfiles(data)
             })
             .catch((error) => {
             });
-    }, []);
+    }, [heroes]);
 
     // 拿到英雄名單
     useEffect(() => {
@@ -115,6 +119,10 @@ export default function Heroes() {
                 console.error("Error fetching data:", error);
             });
     }, []);
+
+    useEffect(() => {
+        console.log('heroProfiles', heroProfiles);
+    }, [heroProfiles])
 
     return (
         <>
