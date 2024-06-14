@@ -1,7 +1,7 @@
 "use client"; // This is a client component 👈🏽
 import { useState, useEffect, useCallback, useMemo } from "react";
 import styled from "styled-components";
-import { Hero } from "../type";
+import { Hero, Profile} from "../type";
 import { getHeroes, fetchProfileData, PROFILE_BASE_URL } from "../api";
 
 // 定義卡片容器
@@ -75,19 +75,12 @@ const PointsRemaining = styled.div`
 `;
 
 export default function Heroes() {
-    // MOCK DATA
-    const abilities = {
-        str: 5, // 力量
-        int: 5, // 智力
-        agi: 0, // 敏捷
-        luk: 5, // 幸運
-      };
-    
-      const pointsRemaining = 30;
-
+    const pointsRemaining = 30;
     const [heroes, setHeroes] = useState<Hero[]>([]);
     const [heroProfiles, setHeroProfiles] = useState({});
     const [chosenId, setChosenId] = useState('');
+    const [abilities, setAbilities] = useState<Profile | null>(null)
+
 
     const generateProfileApis = useMemo(() => {
         return heroes.map(hero => `${PROFILE_BASE_URL}/${hero.id}/profile`);
@@ -97,6 +90,11 @@ export default function Heroes() {
         window.history.replaceState(null, "", `/heroes/:${id}`)
         setChosenId(id);
     }, [])
+
+    useEffect(() => {
+        const heroKey = `hero${chosenId}`;
+        setAbilities(heroProfiles[heroKey as keyof typeof heroProfiles])// 告訴 TypeScript，heroKey 是 heroProfiles 的一個有效索引。
+    }, [heroProfiles, chosenId]) 
 
     // 拿到英雄能力值
     useEffect(() => {
@@ -122,6 +120,10 @@ export default function Heroes() {
 
     useEffect(() => {
         console.log('heroProfiles', heroProfiles);
+    }, [heroProfiles])
+
+    useEffect(() => {
+        console.log('abilities', abilities);
     }, [heroProfiles])
 
     return (
@@ -152,7 +154,7 @@ export default function Heroes() {
                     )}
                 </div>
                 <AbilityContainer>
-                {Object.entries(abilities).map(([key, value]) => (
+                {abilities && Object.entries(abilities).map(([key, value]) => (
                     <AbilityRow key={key}>
                         <AbilityLabel>{key.toUpperCase()}</AbilityLabel>
                         <Button>+</Button>
