@@ -1,8 +1,8 @@
 "use client"; // This is a client component 👈🏽
 import { useState, useEffect, useCallback, useMemo } from "react";
 import styled, { css } from "styled-components";
-import { Hero, Profile, ProfileResponse, ModalProps} from "../type";
-import { getHeroes, fetchProfileData, PROFILE_BASE_URL } from "../api";
+import { Hero, Profile, ProfileResponse, ModalProps } from "../type";
+import { getHeroes, fetchProfileData, PROFILE_BASE_URL, patchProfile } from "../api";
 
 // 定義卡片容器
 const Container = styled.div`
@@ -23,8 +23,8 @@ const Card = styled.div<{ isSelected: boolean }>`
   cursor: pointer; /* 讓卡片有指標樣式，表明它是可點擊的 */
   
   ${(props) =>
-    props.isSelected &&
-    css`
+        props.isSelected &&
+        css`
       background-color: lightblue; /* 選中時的背景顏色 */
     `}  
   `;
@@ -47,6 +47,7 @@ const AbilityContainer = styled.div`
   border: 1px solid #000;
   padding: 20px;
   width: 300px;
+  margin: 0 auto; /* 將左右 margin 設定為 auto，使其水平置中 */
 `;
 
 const AbilityRow = styled.div`
@@ -107,34 +108,36 @@ const ModalButton = styled.button`
 
 const Modal: React.FC<ModalProps> = ({ message, onClose }) => {
     return (
-      <ModalOverlay>
-        <ModalContent>
-          <p>{message}</p>
-          <ModalButton onClick={onClose}>確定</ModalButton>
-        </ModalContent>
-      </ModalOverlay>
+        <ModalOverlay>
+            <ModalContent>
+                <p>{message}</p>
+                <ModalButton onClick={onClose}>確定</ModalButton>
+            </ModalContent>
+        </ModalOverlay>
     );
-  }
+}
 
 export default function Heroes() {
     const [heroes, setHeroes] = useState<Hero[]>([]);
     const [heroProfiles, setHeroProfiles] = useState({});
     const [chosenId, setChosenId] = useState('');
     const [abilities, setAbilities] = useState<Profile | null>(null)
-    const [error, setError] = useState<string | null>(null);
+    const [reminder, setReminder] = useState<string | null>(null);
+    const [isSaving, setIsSaving] = useState(false)
 
-    const generateProfileApis = useMemo(() => {
+    const profileApis = useMemo(() => {
         return heroes.map(hero => `${PROFILE_BASE_URL}/${hero.id}/profile`);
     }, [heroes])
 
     const pointsRemaining = useMemo(() => {
         if (abilities === null || abilities === undefined) {
-            return;}
-            return abilities.total - abilities.agi - abilities.int - abilities.luk - abilities.str
-        }, [abilities])
+            return;
+        }
+        return abilities.total - abilities.agi - abilities.int - abilities.luk - abilities.str
+    }, [abilities])
 
     const handleCloseError = useCallback(() => {
-        setError(null)
+        setReminder(null)
     }, [])
 
     const handleShowProfile = useCallback((id: string) => {
@@ -146,20 +149,38 @@ export default function Heroes() {
     const handleModifyAbility = useCallback((direction: string, key: keyof ProfileResponse) => {
         if (abilities === null || abilities === undefined) {
             return;
-        }        
+        }
         if (direction === "plus") {
-            setAbilities({...abilities, [key]: abilities[key] + 1})           
+            setAbilities({ ...abilities, [key]: abilities[key] + 1 })
         }
         if (direction === "minus") {
-            setAbilities({...abilities, [key]: abilities[key] - 1 })           
+            setAbilities({ ...abilities, [key]: abilities[key] - 1 })
         }
     }, [abilities])
 
     const handleSave = useCallback(() => {
+        setIsSaving(true)
+        if (!abilities) {
+            return;
+        }
         if (pointsRemaining !== 0) {
-            setError('請使用完剩餘點數才能儲存喔！')
+            setReminder('請使用完剩餘點數才能儲存喔！')
         }
         // 打 PATCH API
+        const { total, ...patchPayload } = abilities
+        patchProfile(`${PROFILE_BASE_URL}/${chosenId}/profile`, patchPayload)
+            .then((response) => {
+                console.log('response', response);
+                if (response === "OK") {
+                    setReminder('成功保存！');
+                    setIsSaving(false)
+                }
+            })
+            .catch((error) => {
+                console.error("Error fetching data:", error);
+                setReminder(error.message);
+                setIsSaving(false)
+            })
     }, [pointsRemaining])
 
     // 設定當前能力表
@@ -167,11 +188,11 @@ export default function Heroes() {
         const heroKey = `hero${chosenId}`;
         setAbilities(heroProfiles[heroKey as keyof typeof heroProfiles])// 告訴 TypeScript，heroKey 是 heroProfiles 的一個有效索引。
         console.log('abilities', abilities);
-    }, [heroProfiles, chosenId]) 
+    }, [heroProfiles, chosenId])
 
     // 拿到英雄能力值
     useEffect(() => {
-        fetchProfileData(generateProfileApis)
+        fetchProfileData(profileApis)
             .then((data) => {
                 setHeroProfiles(data)
             })
@@ -218,29 +239,33 @@ export default function Heroes() {
                         <p>Loading...</p>
                     )}
                 </div>
-                <AbilityContainer>
-                {abilities && Object.entries(abilities)
-                .filter(([key]) => key !== 'total')
-                .map(([key, value]) => (
-                    <AbilityRow key={key}>
-                        <AbilityLabel>{key.toUpperCase()}</AbilityLabel>
-                        <Button
-                            disabled={pointsRemaining === 0}
-                            onClick={() => {handleModifyAbility('plus', key as keyof ProfileResponse)}}>
-                            +
-                        </Button>
-                        <AbilityValue>{value}</AbilityValue>
-                        <Button
-                            disabled={value === 0}
-                            onClick={() => {handleModifyAbility('minus', key as keyof ProfileResponse)}}>
-                        -</Button>
-                    </AbilityRow>
-                ))}
-                <PointsRemaining>剩餘點數: {pointsRemaining}</PointsRemaining>
-                <SaveButton onClick={() => {handleSave()}}>儲存</SaveButton>
-            </AbilityContainer>
+                {chosenId && <AbilityContainer>
+                    {abilities && Object.entries(abilities)
+                        .filter(([key]) => key !== 'total')
+                        .map(([key, value]) => (
+                            <AbilityRow key={key}>
+                                <AbilityLabel>{key.toUpperCase()}</AbilityLabel>
+                                <Button
+                                    disabled={pointsRemaining === 0}
+                                    onClick={() => { handleModifyAbility('plus', key as keyof ProfileResponse) }}>
+                                    +
+                                </Button>
+                                <AbilityValue>{value}</AbilityValue>
+                                <Button
+                                    disabled={value === 0}
+                                    onClick={() => { handleModifyAbility('minus', key as keyof ProfileResponse) }}>
+                                    -</Button>
+                            </AbilityRow>
+                        ))}
+                    <PointsRemaining>剩餘點數: {pointsRemaining}</PointsRemaining>
+                    <SaveButton
+                        disabled={isSaving}
+                        onClick={() => { handleSave() }}
+                    >
+                        儲存</SaveButton>
+                </AbilityContainer>}
             </Container>
-            {error && <Modal message={error} onClose={handleCloseError} />}
+            {reminder && <Modal message={reminder} onClose={handleCloseError} />}
         </>
     );
 }

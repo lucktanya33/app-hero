@@ -5,7 +5,6 @@ const HERO_LIST_URL = "https://hahow-recruit.herokuapp.com/heroes";
 export const PROFILE_BASE_URL = 'https://hahow-recruit.herokuapp.com/heroes'
 
 
-
 export const getHeroes = (): Promise<Hero[]> => {
     return axios.get<Hero[]>(HERO_LIST_URL)
         .then((response: AxiosResponse<Hero[]>) => {
@@ -13,9 +12,21 @@ export const getHeroes = (): Promise<Hero[]> => {
         })
         .catch((error: Error) => {
             console.error("Error fetching data:", error);
-            throw error; // 拋出錯誤，以便上層處理
+            throw error;
         });
 };
+
+export const patchProfile = (url: string, payload: ProfileResponse) => {
+    return axios.patch(url, payload)
+    .then((response) => {
+        console.log('response api', response)
+        return response.data; // 返回資料
+    })
+    .catch((error: Error) => {
+        console.error("Error fetching data:", error);
+        throw error;
+    });
+}
 
 export const fetchProfileData = async (apiUrls: string[]) => {
     try {
