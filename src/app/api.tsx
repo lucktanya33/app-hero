@@ -1,5 +1,5 @@
 import axios, { AxiosResponse } from "axios";
-import { Hero, Profile } from "./type";
+import { Hero, ProfileResponse, Profile } from "./type";
 
 const HERO_LIST_URL = "https://hahow-recruit.herokuapp.com/heroes";
 export const PROFILE_BASE_URL = 'https://hahow-recruit.herokuapp.com/heroes'
@@ -19,14 +19,17 @@ export const getHeroes = (): Promise<Hero[]> => {
 
 export const fetchProfileData = async (apiUrls: string[]) => {
     try {
-        const responses = await Promise.allSettled(apiUrls.map(url => axios.get<Profile>(url)));
+        const responses = await Promise.allSettled(apiUrls.map(url => axios.get<ProfileResponse>(url)));
 
         const profileData: { [key: string]: Profile | null } = {};
 
         responses.forEach((response, index) => {
             if (response.status === 'fulfilled') {
-                const data = (response as PromiseFulfilledResult<AxiosResponse<Profile>>).value.data;
-                profileData[`hero${index + 1}`] = data;
+                const data = response.value.data;
+                // 計算總和
+                const total = data.str + data.int + data.agi + data.luk;
+                // 創建新的 Profile 對象並存入 profileData
+                profileData[`hero${index + 1}`] = { ...data, total };
             } else {
                 const reason = (response as PromiseRejectedResult).reason;
                 console.error(`Error fetching data for hero ${index + 1}:`, reason);
@@ -34,7 +37,7 @@ export const fetchProfileData = async (apiUrls: string[]) => {
             }
         });
 
-        console.log('Profile data:', profileData);
+        console.log('ProfileResponse data:', profileData);
         return profileData;
     } catch (error) {
         console.error('Error fetching profile data:', error);
