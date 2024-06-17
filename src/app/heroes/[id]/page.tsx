@@ -95,6 +95,7 @@ const Id: React.FC = () => {
     }
     if (pointsRemaining !== 0) {
       setReminder("請使用完剩餘點數才能儲存喔！");
+      return;
     }
     
     // 打 PATCH API
