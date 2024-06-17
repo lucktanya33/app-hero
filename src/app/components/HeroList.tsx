@@ -37,7 +37,6 @@ const HeroesList: React.FC = () => {
 
   return (
     <>
-      <h1>Marvel Heroes</h1>
       <div
         style={{
           display: "flex",

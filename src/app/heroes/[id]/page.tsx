@@ -53,7 +53,7 @@ const PointsRemaining = styled.div`
 
 const Id: React.FC = () => {
   const context = useContext(HeroesContext) as HeroesContextProps;
-  const { heroes, handleShowProfile, chosenId, heroProfiles } = context;
+  const { chosenId, heroProfiles } = context;
   const [abilities, setAbilities] = useState<Profile | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [reminder, setReminder] = useState<string | null>(null);
