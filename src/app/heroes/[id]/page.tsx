@@ -7,7 +7,6 @@ import {
   HeroesContextProps,
   Profile,
   ProfileResponse,
-  ModalProps,
 } from "@/app/type";
 import React from "react";
 import styled from "styled-components";
@@ -95,6 +94,7 @@ const Id: React.FC = () => {
     }
     if (pointsRemaining !== 0) {
       setReminder("請使用完剩餘點數才能儲存喔！");
+      setIsSaving(false);
       return;
     }
     
