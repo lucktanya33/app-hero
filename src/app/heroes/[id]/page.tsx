@@ -7,7 +7,6 @@ import {
   HeroesContextProps,
   Profile,
   ProfileResponse,
-  ModalProps,
 } from "@/app/type";
 import React from "react";
 import styled from "styled-components";
@@ -54,7 +53,7 @@ const PointsRemaining = styled.div`
 
 const Id: React.FC = () => {
   const context = useContext(HeroesContext) as HeroesContextProps;
-  const { heroes, handleShowProfile, chosenId, heroProfiles } = context;
+  const { chosenId, heroProfiles } = context;
   const [abilities, setAbilities] = useState<Profile | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [reminder, setReminder] = useState<string | null>(null);
@@ -95,6 +94,7 @@ const Id: React.FC = () => {
     }
     if (pointsRemaining !== 0) {
       setReminder("請使用完剩餘點數才能儲存喔！");
+      setIsSaving(false);
       return;
     }
     

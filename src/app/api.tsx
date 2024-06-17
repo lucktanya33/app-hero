@@ -8,7 +8,7 @@ export const PROFILE_BASE_URL = 'https://hahow-recruit.herokuapp.com/heroes'
 export const getHeroes = (): Promise<Hero[]> => {
     return axios.get<Hero[]>(HERO_LIST_URL)
         .then((response: AxiosResponse<Hero[]>) => {
-            return response.data; // 返回資料
+            return response.data;
         })
         .catch((error: Error) => {
             console.error("Error fetching data:", error);
@@ -19,7 +19,7 @@ export const getHeroes = (): Promise<Hero[]> => {
 export const patchProfile = (url: string, payload: ProfileResponse) => {
     return axios.patch(url, payload)
     .then((response) => {
-        return response.data; // 返回資料
+        return response.data;
     })
     .catch((error: Error) => {
         console.error("Error fetching data:", error);
@@ -38,7 +38,7 @@ export const fetchProfileData = async (apiUrls: string[]) => {
                 const data = response.value.data;
                 // 計算總和
                 const total = data.str + data.int + data.agi + data.luk;
-                // 創建新的 Profile 對象並存入 profileData
+                // 建立包含 total 的資料存入 profileData
                 profileData[`hero${index + 1}`] = { ...data, total };
             } else {
                 const reason = (response as PromiseRejectedResult).reason;
@@ -49,6 +49,6 @@ export const fetchProfileData = async (apiUrls: string[]) => {
         return profileData;
     } catch (error) {
         console.error('Error fetching profile data:', error);
-        throw error; // 這裡可以根據需求進一步處理錯誤
+        throw error;
     }
 };
