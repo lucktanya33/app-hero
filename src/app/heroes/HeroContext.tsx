@@ -34,7 +34,7 @@ export const HeroesProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         setHeroProfiles(data);
       })
       .catch((error) => { });
-  }, [heroes]);
+  }, [heroes, chosenId]);
 
   // 拿到英雄列表
   useEffect(() => {
