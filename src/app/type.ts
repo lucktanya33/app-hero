@@ -16,10 +16,19 @@ export type Profile = ProfileResponse & {
 };
 
 export type Profiles = {
-    [key: string]: ProfileResponse; // 定義一個索引簽名，表示 key 為 string，值的類型為 Profile
+    [key: string]: Profile;
 };
 
 export interface ModalProps {
     message: string;
     onClose: () => void;
   }
+
+export interface HeroesContextProps {
+    heroes: Hero[];
+    chosenId: string;
+    setChosenId: (id: string) => void;
+    handleShowProfile: (id: string) => void;
+    heroProfiles: Profiles
+  }
+  

@@ -19,7 +19,6 @@ export const getHeroes = (): Promise<Hero[]> => {
 export const patchProfile = (url: string, payload: ProfileResponse) => {
     return axios.patch(url, payload)
     .then((response) => {
-        console.log('response api', response)
         return response.data; // 返回資料
     })
     .catch((error: Error) => {
@@ -47,8 +46,6 @@ export const fetchProfileData = async (apiUrls: string[]) => {
                 profileData[`hero${index + 1}`] = null; // 或者根據需要做其他處理
             }
         });
-
-        console.log('ProfileResponse data:', profileData);
         return profileData;
     } catch (error) {
         console.error('Error fetching profile data:', error);
